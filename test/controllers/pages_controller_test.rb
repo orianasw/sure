@@ -43,6 +43,22 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='sankey-chart']"
   end
 
+  test "update_display_currency updates preference and redirects" do
+    @family.accounts.create!(name: "EUR Account", currency: "EUR", accountable: Depository.new, balance: 100)
+
+    patch dashboard_display_currency_path, params: { currency: "EUR" }, headers: { "HTTP_REFERER" => root_url }
+
+    assert_redirected_to root_url
+    assert_equal "EUR", @user.reload.display_currency
+  end
+
+  test "update_display_currency rejects invalid currency" do
+    patch dashboard_display_currency_path, params: { currency: "INVALID" }, headers: { "HTTP_REFERER" => root_url }
+
+    assert_redirected_to root_url
+    assert_equal @family.currency, @user.reload.display_currency
+  end
+
   test "changelog" do
     VCR.use_cassette("git_repository_provider/fetch_latest_release_notes") do
       get changelog_path

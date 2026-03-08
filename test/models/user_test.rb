@@ -454,6 +454,22 @@ class UserTest < ActiveSupport::TestCase
     assert_not ActiveStorage::Attachment.exists?(attachment_id)
   end
 
+  test "display_currency returns family currency by default" do
+    @user.update!(preferences: {})
+    assert_equal @user.family.currency, @user.display_currency
+  end
+
+  test "display_currency returns stored preference when set" do
+    @user.update_display_currency("EUR")
+    assert_equal "EUR", @user.display_currency
+  end
+
+  test "update_display_currency persists currency in preferences" do
+    @user.update_display_currency("CLP")
+    @user.reload
+    assert_equal "CLP", @user.preferences["display_currency"]
+  end
+
   test "purging the last user cascades to remove family and its export attachments" do
     family = Family.create!(name: "Solo Family", locale: "en", date_format: "%m-%d-%Y", currency: "USD")
     user = User.create!(family: family, email: "solo@example.com", password: "password123")

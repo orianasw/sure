@@ -87,6 +87,22 @@ module ApplicationHelper
     family_moniker_plural.downcase
   end
 
+  def currency_flag(currency_code)
+    mapping = {
+      "USD" => "🇺🇸", "EUR" => "🇪🇺", "GBP" => "🇬🇧", "JPY" => "🇯🇵", "CAD" => "🇨🇦",
+      "AUD" => "🇦🇺", "CHF" => "🇨🇭", "CNY" => "🇨🇳", "SEK" => "🇸🇪", "NZD" => "🇳🇿",
+      "MXN" => "🇲🇽", "SGD" => "🇸🇬", "HKD" => "🇭🇰", "NOK" => "🇳🇴", "KRW" => "🇰🇷",
+      "TRY" => "🇹🇷", "INR" => "🇮🇳", "RUB" => "🇷🇺", "BRL" => "🇧🇷", "ZAR" => "🇿🇦",
+      "DKK" => "🇩🇰", "PLN" => "🇵🇱", "TWD" => "🇹🇼", "THB" => "🇹🇭", "MYR" => "🇲🇾",
+      "IDR" => "🇮🇩", "PHP" => "🇵🇭", "CZK" => "🇨🇿", "HUF" => "🇭🇺", "ILS" => "🇮🇱",
+      "CLP" => "🇨🇱", "ARS" => "🇦🇷", "COP" => "🇨🇴", "PEN" => "🇵🇪", "UYU" => "🇺🇾",
+      "SAR" => "🇸🇦", "AED" => "🇦🇪", "EGP" => "🇪🇬", "NGN" => "🇳🇬", "KES" => "🇰🇪",
+      "VND" => "🇻🇳", "UAH" => "🇺🇦", "RON" => "🇷🇴", "BGN" => "🇧🇬", "HRK" => "🇭🇷",
+      "ISK" => "🇮🇸", "CRC" => "🇨🇷", "PKR" => "🇵🇰", "BDT" => "🇧🇩", "LKR" => "🇱🇰"
+    }
+    mapping[currency_code.to_s.upcase] || "🏳️"
+  end
+
   def format_money(number_or_money, options = {})
     return nil unless number_or_money
 

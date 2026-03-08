@@ -5,14 +5,15 @@ class BalanceSheet
 
   attr_reader :family
 
-  def initialize(family)
+  def initialize(family, currency: family.currency)
     @family = family
+    @display_currency = currency
   end
 
   def assets
     @assets ||= ClassificationGroup.new(
       classification: "asset",
-      currency: family.currency,
+      currency: @display_currency,
       accounts: sorted(account_totals.asset_accounts)
     )
   end
@@ -20,7 +21,7 @@ class BalanceSheet
   def liabilities
     @liabilities ||= ClassificationGroup.new(
       classification: "liability",
-      currency: family.currency,
+      currency: @display_currency,
       accounts: sorted(account_totals.liability_accounts)
     )
   end
@@ -42,7 +43,7 @@ class BalanceSheet
   end
 
   def currency
-    family.currency
+    @display_currency
   end
 
   def syncing?
@@ -55,11 +56,11 @@ class BalanceSheet
     end
 
     def account_totals
-      @account_totals ||= AccountTotals.new(family, sync_status_monitor: sync_status_monitor)
+      @account_totals ||= AccountTotals.new(family, currency: @display_currency, sync_status_monitor: sync_status_monitor)
     end
 
     def net_worth_series_builder
-      @net_worth_series_builder ||= NetWorthSeriesBuilder.new(family)
+      @net_worth_series_builder ||= NetWorthSeriesBuilder.new(family, currency: @display_currency)
     end
 
     def sorted(accounts)

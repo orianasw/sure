@@ -6,6 +6,7 @@ const parseLocalDate = d3.timeParse("%Y-%m-%d");
 export default class extends Controller {
   static values = {
     data: Object,
+    exchangeRates: { type: Object, default: {} },
     strokeWidth: { type: Number, default: 2 },
     useLabels: { type: Boolean, default: true },
     useTooltip: { type: Boolean, default: true },
@@ -385,6 +386,23 @@ export default class extends Controller {
   }
 
   _tooltipTemplate(datum) {
+    const exchangeRates = this.exchangeRatesValue;
+    let rateLine = "";
+
+    if (exchangeRates && exchangeRates.rates && datum.date) {
+      const dateStr =
+        datum.date instanceof Date
+          ? datum.date.toISOString().split("T")[0]
+          : datum.date;
+      const dayRates = exchangeRates.rates[dateStr];
+      if (dayRates) {
+        const parts = Object.entries(dayRates).map(
+          ([pair, rate]) => `1 ${pair.replace("/", " = " + rate + " ")}`,
+        );
+        rateLine = `<div style="margin-top: 4px; color: var(--color-gray-500); font-size: 11px;">${parts.join(" · ")}</div>`;
+      }
+    }
+
     return `
       <div style="margin-bottom: 4px; color: var(--color-gray-500);">
         ${datum.date_formatted}
@@ -407,6 +425,7 @@ export default class extends Controller {
         `
         }
       </div>
+      ${rateLine}
     `;
   }
 

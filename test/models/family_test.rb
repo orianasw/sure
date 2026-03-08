@@ -178,6 +178,25 @@ class FamilyTest < ActiveSupport::TestCase
     assert_includes family.available_merchants, new_merchant
   end
 
+  test "available_currencies includes family currency and account currencies" do
+    family = families(:empty)
+    family.update!(currency: "USD")
+    family.accounts.create!(name: "Test EUR", currency: "EUR", accountable: Depository.new, balance: 100)
+    family.accounts.create!(name: "Test USD", currency: "USD", accountable: Depository.new, balance: 200)
+
+    currencies = family.available_currencies
+    assert_includes currencies, "USD"
+    assert_includes currencies, "EUR"
+    assert_equal currencies, currencies.uniq.sort
+  end
+
+  test "available_currencies returns only family currency when no accounts" do
+    family = families(:empty)
+    family.update!(currency: "USD")
+
+    assert_equal ["USD"], family.available_currencies
+  end
+
   test "upload_document stores provided metadata on family document" do
     family = families(:dylan_family)
     family.update!(vector_store_id: nil)

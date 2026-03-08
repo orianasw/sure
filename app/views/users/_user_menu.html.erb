@@ -28,19 +28,6 @@
           <% end %>
         </div>
       </div>
-
-      <% if self_hosted? %>
-        <div class="px-4 py-3 border-t border-tertiary">
-          <p class="text-sm">
-            <span class="font-medium text-primary">Version:</span>
-            <%= link_to Sure.version.to_release_tag, "https://github.com/we-promise/sure/releases/tag/#{Sure.version.to_release_tag}", target: "_blank", class: "hover:underline" %>
-
-            <% if Sure.commit_sha.present? %>
-              (<%= link_to Sure.commit_sha.first(7), "https://github.com/we-promise/sure/commit/#{Sure.commit_sha}", target: "_blank", class: "hover:underline" %>)
-            <% end %>
-          </p>
-        </div>
-      <% end %>
     <% end %>
 
     <% menu.with_item(
@@ -59,5 +46,36 @@
     <% menu.with_item(variant: "divider") %>
 
     <% menu.with_item(variant: "button", text: "Log out", icon: "log-out", href: session_path(Current.session), method: :delete) %>
+
+    <% menu.with_custom_content do %>
+      <div class="border-t border-tertiary px-4 py-3 space-y-2">
+        <% if Current.family.available_currencies.size > 1 %>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-secondary">Currency</span>
+            <div class="flex items-center bg-container-inset rounded-lg overflow-hidden p-0.5 gap-0.5">
+              <% Current.family.available_currencies.each do |cur| %>
+                <% active = cur == Current.user.display_currency %>
+                <%= button_to dashboard_display_currency_path,
+                    method: :patch,
+                    params: { currency: cur },
+                    class: "text-xs px-2 py-0.5 rounded-md font-medium transition-colors #{active ? 'bg-container text-primary shadow-sm' : 'text-subdued'}",
+                    data: { turbo_frame: "_top" } do %>
+                  <%= cur %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if self_hosted? %>
+          <p class="text-xs text-subdued">
+            <%= link_to Sure.version.to_release_tag, "https://github.com/we-promise/sure/releases/tag/#{Sure.version.to_release_tag}", target: "_blank", class: "hover:underline" %>
+            <% if Sure.commit_sha.present? %>
+              (<%= link_to Sure.commit_sha.first(7), "https://github.com/we-promise/sure/commit/#{Sure.commit_sha}", target: "_blank", class: "hover:underline" %>)
+            <% end %>
+          </p>
+        <% end %>
+      </div>
+    <% end %>
   <% end %>
 </div>

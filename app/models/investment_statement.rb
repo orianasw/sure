@@ -7,8 +7,9 @@ class InvestmentStatement
 
   attr_reader :family
 
-  def initialize(family)
+  def initialize(family, currency: family.currency)
     @family = family
+    @display_currency = currency
   end
 
   # Get totals for a specific period
@@ -20,12 +21,12 @@ class InvestmentStatement
     result = totals_query(trades_scope: trades_in_period)
 
     PeriodTotals.new(
-      contributions: Money.new(result[:contributions], family.currency),
-      withdrawals: Money.new(result[:withdrawals], family.currency),
-      dividends: Money.new(result[:dividends], family.currency),
-      interest: Money.new(result[:interest], family.currency),
+      contributions: Money.new(convert_amount(result[:contributions], family.currency), @display_currency),
+      withdrawals: Money.new(convert_amount(result[:withdrawals], family.currency), @display_currency),
+      dividends: Money.new(convert_amount(result[:dividends], family.currency), @display_currency),
+      interest: Money.new(convert_amount(result[:interest], family.currency), @display_currency),
       trades_count: result[:trades_count],
-      currency: family.currency
+      currency: @display_currency
     )
   end
 
@@ -35,22 +36,22 @@ class InvestmentStatement
     t.contributions - t.withdrawals
   end
 
-  # Total portfolio value across all investment accounts
+  # Total portfolio value across all investment accounts, converted to display currency
   def portfolio_value
-    investment_accounts.sum(&:balance)
+    investment_accounts.sum { |a| converted_balance(a) }
   end
 
   def portfolio_value_money
-    Money.new(portfolio_value, family.currency)
+    Money.new(portfolio_value, @display_currency)
   end
 
   # Total cash in investment accounts
   def cash_balance
-    investment_accounts.sum(&:cash_balance)
+    investment_accounts.sum { |a| convert_amount(a.cash_balance, a.currency) }
   end
 
   def cash_balance_money
-    Money.new(cash_balance, family.currency)
+    Money.new(cash_balance, @display_currency)
   end
 
   # Total holdings value
@@ -59,7 +60,7 @@ class InvestmentStatement
   end
 
   def holdings_value_money
-    Money.new(holdings_value, family.currency)
+    Money.new(holdings_value, @display_currency)
   end
 
   # All current holdings across investment accounts
@@ -115,6 +116,7 @@ class InvestmentStatement
   end
 
   # Total contributions (all time) - returns numeric for monetize
+  # Already converted by totals()
   def total_contributions
     all_time_totals.contributions&.amount || 0
   end
@@ -154,8 +156,8 @@ class InvestmentStatement
     previous = changes.sum { |t| t.previous.is_a?(Money) ? t.previous.amount : t.previous }
 
     Trend.new(
-      current: Money.new(current, family.currency),
-      previous: Money.new(previous, family.currency)
+      current: Money.new(current, @display_currency),
+      previous: Money.new(previous, @display_currency)
     )
   end
 
@@ -167,6 +169,25 @@ class InvestmentStatement
   private
     def all_time_totals
       @all_time_totals ||= totals(period: Period.all_time)
+    end
+
+    def investment_exchange_rates
+      @investment_exchange_rates ||= begin
+        foreign = investment_accounts.filter_map { |a| a.currency if a.currency != @display_currency }
+        ExchangeRate.rates_for(foreign.uniq, to: @display_currency, date: Date.current)
+      end
+    end
+
+    def converted_balance(account)
+      return account.balance if account.currency == @display_currency
+      rate = investment_exchange_rates[account.currency]
+      account.balance * rate
+    end
+
+    def convert_amount(amount, from_currency)
+      return amount if from_currency == @display_currency || amount.zero?
+      rate = investment_exchange_rates[from_currency]
+      amount * (rate || 1)
     end
 
     PeriodTotals = Data.define(:contributions, :withdrawals, :dividends, :interest, :trades_count, :currency) do
@@ -190,6 +211,6 @@ class InvestmentStatement
     end
 
     def monetizable_currency
-      family.currency
+      @display_currency
     end
 end

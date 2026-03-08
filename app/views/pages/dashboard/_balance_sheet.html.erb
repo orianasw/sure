@@ -67,7 +67,7 @@
                     </div>
 
                     <div class="w-40 shrink-0">
-                      <p><%= format_money(account_group.total_money) %></p>
+                      <p><% if Current.family.available_currencies.size > 1 %><span class="text-subdued font-normal"><%= account_group.currency %></span> <% end %><%= format_money(account_group.total_money) %></p>
                     </div>
                   </div>
                 </summary>

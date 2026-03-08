@@ -48,14 +48,20 @@ class UI::Account::Chart < ApplicationComponent
     end
   end
 
-  def foreign_currency?
-    account.currency != account.family.currency
+  def converted_balances
+    other_currencies = account.family.available_currencies - [account.currency]
+    return [] if other_currencies.empty?
+
+    other_currencies.filter_map do |cur|
+      converted = account.balance_money.exchange_to(cur, date: Date.current, fallback_rate: nil)
+      converted
+    rescue
+      nil
+    end
   end
 
   def converted_balance_money
-    return nil unless foreign_currency?
-
-    account.balance_money.exchange_to(account.family.currency, fallback_rate: 1)
+    converted_balances.first
   end
 
   def view

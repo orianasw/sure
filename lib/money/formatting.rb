@@ -31,11 +31,7 @@ module Money::Formatting
 
   private
     def get_symbol
-      if currency.symbol == "$" && currency.iso_code != "USD"
-        [ currency.iso_code.first(2), currency.symbol ].join
-      else
-        currency.symbol
-      end
+      currency.symbol
     end
 
     def locale_options(locale)

@@ -75,6 +75,16 @@ class BalanceSheetTest < ActiveSupport::TestCase
     assert_equal 3000 + 5000, liability_groups.find { |ag| ag.name == I18n.t("accounts.types.other_liability") }.total
   end
 
+  test "currency returns display currency when specified" do
+    bs = BalanceSheet.new(@family, currency: "EUR")
+    assert_equal "EUR", bs.currency
+  end
+
+  test "currency defaults to family currency" do
+    bs = BalanceSheet.new(@family)
+    assert_equal @family.currency, bs.currency
+  end
+
   private
     def create_account(attributes = {})
       account = @family.accounts.create! name: "Test", currency: "USD", **attributes

@@ -24,11 +24,31 @@
   </div>
 
   <% if series.any? %>
+    <%
+      available = Current.family.available_currencies
+      exchange_rate_info = if available.size > 1
+        base = available.include?("USD") ? "USD" : available.first
+        others = available - [base]
+        dates = series.map(&:date)
+        rates_by_date = {}
+        others.each do |other|
+          rates = ExchangeRate.where(from_currency: base, to_currency: other, date: dates).index_by(&:date)
+          dates.each do |d|
+            rate = rates[d]
+            next unless rate
+            rates_by_date[d.to_s] ||= {}
+            rates_by_date[d.to_s]["#{base}/#{other}"] = rate.rate.to_f.round(2)
+          end
+        end
+        { base: base, others: others, rates: rates_by_date }
+      end
+    %>
     <div
     id="netWorthChart"
     class="w-full flex-1 min-h-52"
     data-controller="time-series-chart"
-    data-time-series-chart-data-value="<%= series.to_json %>"></div>
+    data-time-series-chart-data-value="<%= series.to_json %>"
+    <% if exchange_rate_info %>data-time-series-chart-exchange-rates-value="<%= exchange_rate_info.to_json %>"<% end %>></div>
   <% else %>
     <div class="w-full h-full flex items-center justify-center">
       <p class="text-secondary text-sm"><%= t(".data_not_available") %></p>

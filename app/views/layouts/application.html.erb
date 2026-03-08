@@ -138,7 +138,34 @@ end %>
               <%= render "layouts/shared/breadcrumbs", breadcrumbs: @breadcrumbs %>
             <% end %>
           </div>
-          <%= icon("panel-right", as_button: true, data: { action: "app-layout#toggleRightSidebar" }) %>
+          <div class="flex items-center gap-2">
+            <% available = Current.family.available_currencies %>
+            <% if available.size > 1 %>
+              <div class="flex items-center gap-2">
+                <% usd = available.include?("USD") ? "USD" : available.first %>
+                <% others = available - [usd] %>
+                <% others.each do |other| %>
+                  <% rate = ExchangeRate.find_or_fetch_rate(from: usd, to: other) %>
+                  <% if rate %>
+                    <span class="text-xs text-secondary">1 <%= usd %> = <%= number_with_delimiter(rate.rate.round(2)) %> <%= other %></span>
+                  <% end %>
+                <% end %>
+                <div class="flex items-center bg-container-inset rounded-lg overflow-hidden p-0.5 gap-0.5">
+                  <% available.each do |cur| %>
+                    <% active = cur == Current.user.display_currency %>
+                    <%= button_to dashboard_display_currency_path,
+                        method: :patch,
+                        params: { currency: cur },
+                        class: "text-sm px-2.5 py-1 rounded-md font-medium transition-colors #{active ? 'bg-container text-primary shadow-sm' : 'text-subdued'}",
+                        data: { turbo_frame: "_top" } do %>
+                      <%= cur %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            <%= icon("panel-right", as_button: true, data: { action: "app-layout#toggleRightSidebar" }) %>
+          </div>
         </div>
       <% end %>
 

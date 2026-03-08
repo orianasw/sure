@@ -244,6 +244,24 @@ class User < ApplicationRecord
     AccountOrder.find(default_account_order) || AccountOrder.default
   end
 
+  def display_currency
+    preferences&.dig("display_currency") || family.currency
+  end
+
+  def update_display_currency(currency_code)
+    updated_prefs = (preferences || {}).deep_dup
+    updated_prefs["display_currency"] = currency_code
+    update!(preferences: updated_prefs)
+  end
+
+  def dashboard_section_hidden?(section_key)
+    preferences&.dig("hidden_sections", section_key) == true
+  end
+
+  def hidden_dashboard_sections
+    (preferences&.dig("hidden_sections") || {}).select { |_, v| v }.keys
+  end
+
   # Dashboard preferences management
   def dashboard_section_collapsed?(section_key)
     preferences&.dig("collapsed_sections", section_key) == true

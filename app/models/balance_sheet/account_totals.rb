@@ -1,6 +1,7 @@
 class BalanceSheet::AccountTotals
-  def initialize(family, sync_status_monitor:)
+  def initialize(family, currency: family.currency, sync_status_monitor:)
     @family = family
+    @display_currency = currency
     @sync_status_monitor = sync_status_monitor
   end
 
@@ -66,15 +67,15 @@ class BalanceSheet::AccountTotals
     # @return [Hash{String => Numeric}] currency code to rate mapping
     def exchange_rates
       @exchange_rates ||= begin
-        foreign_currencies = accounts.filter_map { |a| a.currency if a.currency != family.currency }
-        ExchangeRate.rates_for(foreign_currencies, to: family.currency, date: Date.current)
+        foreign_currencies = accounts.filter_map { |a| a.currency if a.currency != @display_currency }
+        ExchangeRate.rates_for(foreign_currencies, to: @display_currency, date: Date.current)
       end
     end
 
-    # Converts an account's balance to the family's currency using pre-fetched exchange rates.
-    # @return [BigDecimal] balance in the family's currency
+    # Converts an account's balance to the display currency using pre-fetched exchange rates.
+    # @return [BigDecimal] balance in the display currency
     def converted_balance_for(account)
-      return account.balance if account.currency == family.currency
+      return account.balance if account.currency == @display_currency
 
       rate = exchange_rates[account.currency]
       account.balance * rate

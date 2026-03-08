@@ -1,4 +1,5 @@
 <%# locals: (family:, active_tab:, mobile: false) %>
+<% sidebar_balance_sheet = family.balance_sheet(currency: Current.user&.display_currency || family.currency) %>
 
 <div id="account-sidebar-tabs">
   <% if family.missing_data_provider? %>
@@ -40,7 +41,7 @@
         ) %>
 
         <div>
-          <% family.balance_sheet.assets.account_groups.each do |group| %>
+          <% sidebar_balance_sheet.assets.account_groups.each do |group| %>
             <%= render "accounts/accountable_group", account_group: group, mobile: mobile %>
           <% end %>
         </div>
@@ -60,7 +61,7 @@
           ) %>
 
         <div>
-          <% family.balance_sheet.liabilities.account_groups.each do |group| %>
+          <% sidebar_balance_sheet.liabilities.account_groups.each do |group| %>
             <%= render "accounts/accountable_group", account_group: group, mobile: mobile %>
           <% end %>
         </div>
@@ -80,7 +81,7 @@
           ) %>
 
         <div>
-          <% family.balance_sheet.account_groups.each do |group| %>
+          <% sidebar_balance_sheet.account_groups.each do |group| %>
             <%= render "accounts/accountable_group", account_group: group, mobile: mobile, all_tab: true %>
           <% end %>
         </div>

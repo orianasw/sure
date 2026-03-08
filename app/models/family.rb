@@ -115,8 +115,16 @@ class Family < ApplicationRecord
     AutoMerchantDetector.new(self, transaction_ids: transaction_ids).auto_detect
   end
 
-  def balance_sheet
-    @balance_sheet ||= BalanceSheet.new(self)
+  def available_currencies
+    ([currency] + accounts.visible.distinct.pluck(:currency)).uniq.sort
+  end
+
+  def balance_sheet(currency: self.currency)
+    BalanceSheet.new(self, currency: currency)
+  end
+
+  def investment_statement(currency: self.currency)
+    InvestmentStatement.new(self, currency: currency)
   end
 
   def income_statement
@@ -191,9 +199,6 @@ class Family < ApplicationRecord
     end
   end
 
-  def investment_statement
-    @investment_statement ||= InvestmentStatement.new(self)
-  end
 
   def eu?
     country != "US" && country != "CA"

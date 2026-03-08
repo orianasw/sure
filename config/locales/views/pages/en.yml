@@ -17,6 +17,8 @@ en:
       new: "New"
       drag_to_reorder: "Drag to reorder section"
       toggle_section: "Toggle section visibility"
+      hide_section: "Hide section"
+      hidden_sections: "Hidden sections"
       net_worth_chart:
         data_not_available: Data not available for the selected period
         title: Net Worth

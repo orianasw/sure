@@ -36,23 +36,24 @@ class Balance::ChartSeriesBuilder
     end
 
     def build_series_for(column)
+      previous_value = nil
+
       values = query_data.map do |datum|
-        # Map column names to their start equivalents
-        previous_column = case column
-        when :end_balance then :start_balance
-        when :end_cash_balance then :start_cash_balance
-        when :end_holdings_balance then :start_holdings_balance
-        end
+        current_value = Money.new(datum.send(column), currency)
+
+        trend = Trend.new(
+          current: current_value,
+          previous: previous_value || current_value,
+          favorable_direction: favorable_direction
+        )
+
+        previous_value = current_value
 
         Series::Value.new(
           date: datum.date,
           date_formatted: I18n.l(datum.date, format: :long),
-          value: Money.new(datum.send(column), currency),
-          trend: Trend.new(
-            current: Money.new(datum.send(column), currency),
-            previous: Money.new(datum.send(previous_column), currency),
-            favorable_direction: favorable_direction
-          )
+          value: current_value,
+          trend: trend
         )
       end
 

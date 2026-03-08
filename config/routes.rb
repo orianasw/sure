@@ -128,6 +128,7 @@ Rails.application.routes.draw do
   get "changelog", to: "pages#changelog"
   get "feedback", to: "pages#feedback"
   patch "dashboard/preferences", to: "pages#update_preferences"
+  patch "dashboard/display_currency", to: "pages#update_display_currency"
 
   resource :current_session, only: %i[update]
 

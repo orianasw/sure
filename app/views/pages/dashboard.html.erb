@@ -27,10 +27,14 @@
   </div>
 <% end %>
 
+<% hidden_keys = Current.user.hidden_dashboard_sections %>
+<% hidden_sections = @dashboard_sections.select { |s| s[:visible] && hidden_keys.include?(s[:key]) } %>
+
 <div class="grid grid-cols-1 2xl:grid-cols-2 gap-6 pb-6 lg:pb-12" data-controller="dashboard-sortable" data-action="dragover->dashboard-sortable#dragOver drop->dashboard-sortable#drop" role="list" aria-label="Dashboard sections">
   <% if Current.family.accounts.any? %>
     <% @dashboard_sections.each do |section| %>
       <% next unless section[:visible] %>
+      <% next if hidden_keys.include?(section[:key]) %>
       <section
         class="bg-container rounded-xl shadow-border-xs transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
         data-dashboard-sortable-target="section"
@@ -46,11 +50,8 @@
         data-action="
           dragstart->dashboard-sortable#dragStart
           dragend->dashboard-sortable#dragEnd
-          touchstart->dashboard-sortable#touchStart
-          touchmove->dashboard-sortable#touchMove
-          touchend->dashboard-sortable#touchEnd
           keydown->dashboard-sortable#handleKeyDown">
-        <div class="px-4 py-2 flex items-center justify-between">
+        <div class="px-4 py-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -77,6 +78,13 @@
             <% end %>
             <button
               type="button"
+              class="text-secondary hover:text-primary transition-colors p-0.5 opacity-0 group-hover:opacity-100"
+              data-action="click->dashboard-section#hide"
+              aria-label="<%= t("pages.dashboard.hide_section") %>">
+              <%= icon("x", size: "sm") %>
+            </button>
+            <button
+              type="button"
               class="cursor-grab active:cursor-grabbing text-secondary hover:text-primary transition-colors p-0.5 opacity-0 group-hover:opacity-100 hidden lg:block"
               aria-label="<%= t("pages.dashboard.drag_to_reorder") %>">
               <%= icon("grip-vertical", size: "sm") %>
@@ -94,3 +102,18 @@
     </section>
   <% end %>
 </div>
+
+<% if hidden_sections.any? %>
+  <div class="flex items-center gap-2 flex-wrap pb-6 lg:pb-12">
+    <span class="text-sm text-secondary"><%= t("pages.dashboard.hidden_sections") %>:</span>
+    <% hidden_sections.each do |section| %>
+      <%= form_with url: "/dashboard/preferences", method: :patch, class: "inline" do %>
+        <%= hidden_field_tag "preferences[hidden_sections][#{section[:key]}]", false %>
+        <button type="submit" class="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-lg bg-container border border-secondary text-secondary hover:text-primary hover:border-primary transition-colors">
+          <%= icon("plus", size: "sm") %>
+          <%= t(section[:title]) %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

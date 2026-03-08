@@ -9,8 +9,9 @@ class PagesController < ApplicationController
       redirect_to chats_path and return
     end
 
-    @balance_sheet = Current.family.balance_sheet
-    @investment_statement = Current.family.investment_statement
+    display_currency = Current.user.display_currency
+    @balance_sheet = Current.family.balance_sheet(currency: display_currency)
+    @investment_statement = Current.family.investment_statement(currency: display_currency)
     @accounts = Current.family.accounts.visible.with_attached_logo
 
     family_currency = Current.family.currency
@@ -31,11 +32,21 @@ class PagesController < ApplicationController
     @breadcrumbs = [ [ "Home", chats_path ], [ "Intro", nil ] ]
   end
 
+  def update_display_currency
+    currency = params[:currency]
+    if Current.family.available_currencies.include?(currency)
+      Current.user.update_display_currency(currency)
+    end
+    redirect_back(fallback_location: root_path)
+  end
+
   def update_preferences
-    if Current.user.update_dashboard_preferences(preferences_params)
+    Current.user.update_dashboard_preferences(preferences_params)
+
+    if request.headers["Content-Type"]&.include?("application/json")
       head :ok
     else
-      head :unprocessable_entity
+      redirect_back(fallback_location: root_path)
     end
   end
 
@@ -77,6 +88,9 @@ class PagesController < ApplicationController
       prefs = params.require(:preferences)
       {}.tap do |permitted|
         permitted["collapsed_sections"] = prefs[:collapsed_sections].to_unsafe_h if prefs[:collapsed_sections]
+        if prefs[:hidden_sections]
+          permitted["hidden_sections"] = prefs[:hidden_sections].to_unsafe_h.transform_values { |v| ActiveModel::Type::Boolean.new.cast(v) }
+        end
         permitted["section_order"] = prefs[:section_order] if prefs[:section_order]
       end
     end

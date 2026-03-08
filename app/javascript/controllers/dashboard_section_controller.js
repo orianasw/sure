@@ -53,6 +53,37 @@ export default class extends Controller {
     this.savePreference(false);
   }
 
+  async hide(event) {
+    event.preventDefault();
+
+    const preferences = {
+      hidden_sections: {
+        [this.sectionKeyValue]: true,
+      },
+    };
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) return;
+
+    try {
+      const response = await fetch("/dashboard/preferences", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken.content,
+        },
+        body: JSON.stringify({ preferences }),
+      });
+
+      if (response.ok) {
+        this.element.remove();
+        Turbo.visit(window.location.href, { action: "replace" });
+      }
+    } catch (error) {
+      console.error("[Dashboard Section] Network error saving preferences:", error);
+    }
+  }
+
   async savePreference(collapsed) {
     const preferences = {
       collapsed_sections: {
